@@ -9,24 +9,49 @@ import SwiftUI
 
 class WordSearchViewModel: ObservableObject {
     @Published var grid: [[GridItemModel]]
-    @Published var words: [Word]
-    @Published var selectedPositions: [(Int, Int)] = []
+        @Published var words: [Word]
+        @Published var selectedPositions: [(Int, Int)] = []
+        @Published var detectedWords: [String] = []
+//        private let spellChecker = NSSpellChecker.shared
     
     init() {
-        self.grid = [
-            [GridItemModel(letter: "D"), GridItemModel(letter: "G"), GridItemModel(letter: "L"), GridItemModel(letter: "E"), GridItemModel(letter: "W"), GridItemModel(letter: "Q")],
-            [GridItemModel(letter: "O"), GridItemModel(letter: "O"), GridItemModel(letter: "D"), GridItemModel(letter: "C"), GridItemModel(letter: "O"), GridItemModel(letter: "T")],
-            [GridItemModel(letter: "E"), GridItemModel(letter: "G"), GridItemModel(letter: "T"), GridItemModel(letter: "T"), GridItemModel(letter: "L"), GridItemModel(letter: "F")],
-            [GridItemModel(letter: "L"), GridItemModel(letter: "S"), GridItemModel(letter: "R"), GridItemModel(letter: "E"), GridItemModel(letter: "E"), GridItemModel(letter: "E")],
-            [GridItemModel(letter: "C"), GridItemModel(letter: "H"), GridItemModel(letter: "A"), GridItemModel(letter: "L"), GridItemModel(letter: "W"), GridItemModel(letter: "Z")],
-            [GridItemModel(letter: "G"), GridItemModel(letter: "E"), GridItemModel(letter: "D"), GridItemModel(letter: "L"), GridItemModel(letter: "O"), GridItemModel(letter: "A")],
-            [GridItemModel(letter: "E"), GridItemModel(letter: "G"), GridItemModel(letter: "N"), GridItemModel(letter: "E"), GridItemModel(letter: "R"), GridItemModel(letter: "K")]
-        ]
-        
+          self.grid = Array(repeating: Array(repeating: GridItemModel(letter: ""), count: 8), count: 8)
+          self.words = []
+          generateGrid()
+      }
+    
+    func generateGrid() {
+        // Place hidden words in the grid
         self.words = [
             Word(text: "TREE", positions: [(3, 2), (3, 3), (3, 4), (3, 5)]),
             Word(text: "CHALLENGE", positions: [(4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 5), (6, 5)]),
             Word(text: "GRID", positions: [(2, 2), (3, 2), (4, 2), (5, 2)])
         ]
+        
+        // Place words in the grid
+        for word in self.words {
+            for (index, (i, j)) in word.positions.enumerated() {
+                let letterIndex = word.text.index(word.text.startIndex, offsetBy: index)
+                grid[i][j].letter = String(word.text[letterIndex])
+            }
+        }
+        
+        // Fill empty spaces with random letters
+        for i in 0..<8 {
+            for j in 0..<8 {
+                if grid[i][j].letter.isEmpty {
+                    grid[i][j].letter = randomLetter()
+                }
+            }
+        }
+    }
+    
+    private func randomLetter() -> String {
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        return String(letters.randomElement()!)
+    }
+    
+    func validateWord(_ word: String) -> Bool {
+        return words.contains { $0.text.uppercased() == word }
     }
 }
